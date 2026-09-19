@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "name": "Ghent",
+      "country": "Belgium",
+      "latitude": 51.05,
+      "longitude": 3.71667
+    },
+    {
+      "name": "Ghent",
+      "country": "United States",
+      "latitude": 42.4139,
+      "longitude": -76.4783
+    }
+  ]
+}

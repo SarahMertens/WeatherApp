@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "cityName": "Ghent",
+      "country": "Belgium",
+      "latitude": 51.05,
+      "longitude": 3.71667
+    },
+    {
+      "id": 2,
+      "cityName": "Paris",
+      "country": "France",
+      "latitude": 48.85341,
+      "longitude": 2.3488
+    }
+  ]
+}

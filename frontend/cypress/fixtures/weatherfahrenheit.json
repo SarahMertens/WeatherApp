@@ -1,0 +1,10 @@
+{
+  "temperature": 66,
+  "feelsLike": 63,
+  "humidity": 72,
+  "windSpeed": 13.4,
+  "condition": "Clear sky",
+  "icon": "sun",
+  "temperatureUnit": "\u00b0F",
+  "windSpeedUnit": "km/h"
+}
