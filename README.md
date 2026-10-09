@@ -1,137 +1,117 @@
-# WeatherApp
+# Weatherly
 
-Full-stack weather application developed for the DEV@WORK FullStack
-Intern test.
+A full-stack weather dashboard: search any city, see its current weather in
+Celsius or Fahrenheit, and keep a list of favorite cities.
 
-The application allows users to search for a city, view the current
-weather, switch between Celsius and Fahrenheit, and manage favorite
-cities. Weather data is retrieved from the Open-Meteo API. Favorite
-cities are stored in MySQL.
+![Weatherly dashboard](docs/screenshot-desktop.png)
+
+Originally built as a take-home assignment for a full-stack internship. The
+brief asked for the current weather, a city picker, a Fahrenheit option and
+favorite cities, with a separate frontend and backend and a free choice of
+technology.
 
 ## Features
 
--   Search for cities
--   Display current weather for the selected city
--   Temperature in Celsius or Fahrenheit
--   Feels-like temperature
--   Humidity
--   Wind speed
--   Weather condition and corresponding icon
--   Add and remove favorite cities
--   Prevent duplicate favorites based on latitude + longitude
--   Responsive dashboard
--   REST API with Swagger documentation
--   End-to-end backend tests
+- City search with debouncing (one request per search, not per keystroke)
+- Current temperature, feels-like temperature, humidity, wind speed and
+  weather condition with a matching icon
+- Celsius / Fahrenheit toggle
+- Favorite cities stored in MySQL; the same location cannot be saved twice
+- Loading, empty and error states for every request
+- Responsive layout ([mobile screenshot](docs/screenshot-mobile.png)) and
+  keyboard-accessible controls
+- REST API documented with Swagger
 
-# Backend
+## Tech stack
 
-## Technologies
+| Part     | Technology                                                    |
+| -------- | ------------------------------------------------------------- |
+| Frontend | React 19, Vite, Tailwind CSS 4, Axios                         |
+| Backend  | NestJS 11, TypeScript, Drizzle ORM, class-validator, Swagger  |
+| Database | MySQL 8 (Docker Compose)                                      |
+| Testing  | Jest, Supertest, Testcontainers (backend) · Cypress (frontend)|
+| CI       | GitHub Actions: lint, build and all tests on every push       |
 
--   NestJS
--   TypeScript
--   Drizzle ORM
--   MySQL 8
--   Docker / Docker Compose
--   Swagger
--   Jest
--   Supertest
--   Testcontainers
+## Architecture
 
-## Requirements
+```text
+React / Vite frontend
+        │  REST (JSON)
+        ▼
+NestJS backend ──────────► Open-Meteo API  (geocoding + current weather)
+        │
+        ▼
+MySQL  (favorite cities)
+```
 
--   Node.js
--   pnpm
--   Docker Desktop
+The frontend only ever talks to its own backend. The backend calls
+[Open-Meteo](https://open-meteo.com/) (free, no API key) and returns a small,
+frontend-friendly response. Weather data is always fetched live and never
+stored; MySQL only holds the favorites.
 
-## Installation
+```text
+backend/src
+├── city/         city search        GET /api/cities/search
+├── weather/      current weather    GET /api/weather
+├── favorite/     favorites CRUD     /api/favorites
+├── open-meteo/   HTTP client for the external API (with timeout)
+├── drizzle/      schema, connection, migrations on startup, error filter
+└── app.setup.ts  validation, CORS and security headers (shared with the tests)
 
-``` bash
+frontend/src
+├── api/          one function per backend endpoint
+├── hooks/        useWeather, useFavorites (data loading and state)
+├── components/   CitySearch, CurrentWeather, WeatherHighlights, Favorites, UnitToggle
+└── pages/        WeatherDashboard
+```
+
+## Getting started
+
+Requirements: Node.js 22+, [pnpm](https://pnpm.io/) and Docker.
+
+### 1. Backend
+
+```bash
 cd backend
+cp .env.example .env
 pnpm install
+docker compose up -d     # MySQL on port 3307
+pnpm start:dev           # migrations are applied automatically on startup
 ```
 
-## Environment variables
+- API: <http://localhost:3000/api>
+- Swagger: <http://localhost:3000/docs>
+- Health check: <http://localhost:3000/api/health>
 
-Create `backend/.env`:
+Optional: `pnpm db:seed` fills the database with a few example favorites.
 
-``` env
-NODE_ENV=development
-PORT=3000
-FRONTEND_URL=http://localhost:5173
-DATABASE_URL=mysql://devusr:devpwd@localhost:3307/weather
+### 2. Frontend
+
+In a second terminal:
+
+```bash
+cd frontend
+cp .env.example .env
+pnpm install
+pnpm dev
 ```
 
-## Database
+Open <http://localhost:5173>.
 
-Start MySQL:
+## API
 
-``` bash
-docker compose up -d
-```
+| Method   | Endpoint                                     | Description                              |
+| -------- | -------------------------------------------- | ---------------------------------------- |
+| `GET`    | `/api/cities/search?q=Ghent`                 | Search cities by name (2–100 characters) |
+| `GET`    | `/api/weather?latitude=&longitude=&unit=`    | Current weather; `unit` is `celsius` (default) or `fahrenheit` |
+| `GET`    | `/api/favorites`                             | List favorites                           |
+| `GET`    | `/api/favorites/:id`                         | Get one favorite                         |
+| `POST`   | `/api/favorites`                             | Add a favorite                           |
+| `DELETE` | `/api/favorites/:id`                         | Remove a favorite                        |
 
-Run migrations:
+Example `POST /api/favorites` body:
 
-``` bash
-pnpm db:migrate
-```
-
-## Start the backend
-
-``` bash
-pnpm start:dev
-```
-
-Backend:
-
-``` text
-http://localhost:3000/api
-```
-
-Health check:
-
-``` text
-http://localhost:3000/api/health
-```
-
-Swagger:
-
-``` text
-http://localhost:3000/docs
-```
-
-## API endpoints
-
-### City search
-
-``` http
-GET /api/cities/search?q=Ghent
-```
-
-### Current weather
-
-``` http
-GET /api/weather?latitude=51.0543&longitude=3.7174&unit=celsius
-```
-
-Supported units:
-
-``` text
-celsius
-fahrenheit
-```
-
-### Favorites
-
-``` http
-GET /api/favorites
-GET /api/favorites/:id
-POST /api/favorites
-DELETE /api/favorites/:id
-```
-
-Example POST body:
-
-``` json
+```json
 {
   "cityName": "Ghent",
   "country": "Belgium",
@@ -140,146 +120,53 @@ Example POST body:
 }
 ```
 
-## Favorite uniqueness
+Errors use standard status codes: `400` for invalid input (with the messages
+grouped per field), `404` for an unknown favorite, `409` for a duplicate
+favorite and `503` when Open-Meteo cannot be reached.
 
-Favorite cities are unique based on the combination of:
+## Tests
 
-``` text
-latitude + longitude
-```
-
-The same location cannot be added twice. No separate city ID is required
-for this uniqueness check.
-
-## Backend tests
-
-The e2e tests use Jest, Supertest and MySQL Testcontainers.
-
-The tests use isolated temporary databases and do not use the normal
-development database.
-
-Run all e2e tests:
-
-``` bash
-pnpm test:e2e
-```
-
-Other commands:
-
-``` bash
-pnpm test
-pnpm test:cov
-pnpm lint
-pnpm build
-```
-
-# Frontend
-
-## Technologies
-
--   React
--   Vite
--   JavaScript
--   Tailwind CSS
--   Axios
--   Lucide React
-
-## Installation
-
-``` bash
-cd frontend
-pnpm install
-```
-
-## Environment variables
-
-Create `frontend/.env`:
-
-``` env
-VITE_API_URL=http://localhost:3000/api
-```
-
-## Start the frontend
-
-``` bash
-pnpm dev
-```
-
-Frontend:
-
-``` text
-http://localhost:5173
-```
-
-# Running the complete application
-
-Start MySQL:
-
-``` bash
+```bash
+# backend
 cd backend
-docker compose up -d
-```
+pnpm test        # unit tests
+pnpm test:e2e    # API tests against a real MySQL (needs Docker running)
 
-Start the backend:
-
-``` bash
-cd backend
-pnpm start:dev
-```
-
-Start the frontend in a second terminal:
-
-``` bash
+# frontend (start `pnpm dev` first)
 cd frontend
-pnpm dev
+pnpm test        # Cypress, headless
+pnpm test:ui     # Cypress, interactive
 ```
 
-Open:
+- **Backend e2e tests** start the real application and a throwaway MySQL
+  container (Testcontainers), so they never touch the development database.
+  Calls to Open-Meteo are mocked, which keeps the tests fast and independent
+  of the network.
+- **Frontend tests** mock every backend call with fixtures, so they run
+  without a backend.
 
-``` text
-http://localhost:5173
-```
+## Design decisions
 
-# External API
+- **A backend in front of Open-Meteo.** The frontend stays simple, the
+  external API can be swapped without touching the UI, and input is validated
+  in one place.
+- **Uniqueness lives in the database.** Favorites have a unique index on
+  `(latitude, longitude)`. The service simply inserts and a filter translates
+  the database's duplicate error into `409 Conflict`. A "check first, then
+  insert" approach needs an extra query and still lets two simultaneous
+  requests both pass the check.
+- **Unit conversion is left to Open-Meteo.** The requested unit is passed
+  through, so there is no conversion or rounding logic to maintain.
+- **Stale responses are ignored in the UI.** When the user switches city
+  before the previous request finished, the late response is dropped, so the
+  screen never shows one city's name with another city's weather.
+- **Tests run against the same setup as production.** Validation, CORS and
+  filters are configured in one function used by both `main.ts` and the tests.
 
-The application uses Open-Meteo for city geocoding and current weather
-data.
+## Possible improvements
 
-The backend communicates with Open-Meteo. The frontend communicates with
-the application's own backend API.
-
-Weather data is not stored in MySQL. It is retrieved from Open-Meteo
-when weather information is requested.
-
-MySQL is used for favorite cities.
-
-# Architecture
-
-``` text
-React / Vite frontend
-        |
-        | REST / HTTP
-        v
-NestJS backend
-        |
-        +------------------+
-        |                  |
-        v                  v
-MySQL database       Open-Meteo API
-        |
-        v
-Favorite cities
-```
-
-# Assignment
-
-This application was developed for the DEV@WORK FullStack Intern test.
-
-The assignment requires an application that displays current weather,
-allows a user to select a city, supports a Fahrenheit option, and allows
-favorite cities to be managed. It also requires a frontend and backend
-while leaving the technology choice open.
-
-This implementation uses React/Vite for the frontend and
-NestJS/TypeScript for the backend, with MySQL for persistent favorite
-cities.
+- Cache Open-Meteo responses for a few minutes to reduce external calls
+- Hourly or multi-day forecast
+- User accounts, so favorites are per user instead of global
+- A deployed demo (for example the frontend on Vercel and the backend on
+  Render or Railway)

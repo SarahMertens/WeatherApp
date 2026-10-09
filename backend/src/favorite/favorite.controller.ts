@@ -1,39 +1,30 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Delete,
   Body,
-  Param,
-  ParseIntPipe,
+  Controller,
+  Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
 } from '@nestjs/common';
-
+import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
-  ApiTags,
-  ApiResponse,
-  ApiParam,
-} from '@nestjs/swagger';
-
-import { FavoriteService } from './favorite.service';
-
-import {
+  CreateFavoriteRequestDto,
   FavoriteListResponseDto,
   FavoriteResponseDto,
-  CreateFavoriteRequestDto,
 } from './favorite.dto';
+import { FavoriteService } from './favorite.service';
 
 @ApiTags('Favorites')
 @Controller('favorites')
 export class FavoriteController {
-  constructor(
-    private readonly favoriteService: FavoriteService,
-  ) {}
+  constructor(private readonly favoriteService: FavoriteService) {}
 
   @ApiResponse({
     status: 200,
-    description: 'Alle favoriete steden',
+    description: 'All favorite cities',
     type: FavoriteListResponseDto,
   })
   @Get()
@@ -43,18 +34,11 @@ export class FavoriteController {
 
   @ApiResponse({
     status: 200,
-    description: 'Favoriete stad op ID',
+    description: 'The favorite city with the given id',
     type: FavoriteResponseDto,
   })
-  @ApiResponse({
-    status: 404,
-    description: 'Favoriet niet gevonden',
-  })
-  @ApiParam({
-    name: 'id',
-    type: Number,
-    example: 1,
-  })
+  @ApiResponse({ status: 404, description: 'Favorite not found' })
+  @ApiParam({ name: 'id', type: Number, example: 1 })
   @Get(':id')
   async getById(
     @Param('id', ParseIntPipe) id: number,
@@ -64,16 +48,13 @@ export class FavoriteController {
 
   @ApiResponse({
     status: 201,
-    description: 'Stad toegevoegd aan favorieten',
+    description: 'City added to the favorites',
     type: FavoriteResponseDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Foute inputdata',
-  })
+  @ApiResponse({ status: 400, description: 'Invalid request body' })
   @ApiResponse({
     status: 409,
-    description: 'Stad staat al bij favorieten',
+    description: 'This location is already a favorite',
   })
   @Post()
   async create(
@@ -82,24 +63,12 @@ export class FavoriteController {
     return this.favoriteService.create(dto);
   }
 
-  @ApiResponse({
-    status: 204,
-    description: 'Favoriet verwijderd',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Favoriet niet gevonden',
-  })
-  @ApiParam({
-    name: 'id',
-    type: Number,
-    example: 1,
-  })
+  @ApiResponse({ status: 204, description: 'Favorite removed' })
+  @ApiResponse({ status: 404, description: 'Favorite not found' })
+  @ApiParam({ name: 'id', type: Number, example: 1 })
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<void> {
+  async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.favoriteService.deleteById(id);
   }
 }

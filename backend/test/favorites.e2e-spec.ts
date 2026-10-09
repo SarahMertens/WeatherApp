@@ -63,6 +63,14 @@ describe('Favorites', () => {
       });
     });
 
+    it('should return favorites in the order they were added', async () => {
+      const response = await request(app.getHttpServer()).get(url);
+
+      expect(
+        response.body.items.map((favorite: { id: number }) => favorite.id),
+      ).toEqual(FAVORITES_SEED.map((favorite) => favorite.id));
+    });
+
     it('should return an empty array when no favorites exist', async () => {
       await clearFavorites(drizzle);
 
@@ -96,9 +104,7 @@ describe('Favorites', () => {
       const response = await request(app.getHttpServer()).get(`${url}/9999`);
 
       expect(response.statusCode).toBe(404);
-      expect(response.body.message).toBe(
-        'Er bestaat geen favoriet met deze id',
-      );
+      expect(response.body.message).toBe('No favorite exists with this id');
     });
 
     it('should return 400 when id is not a number', async () => {
@@ -148,30 +154,26 @@ describe('Favorites', () => {
     });
 
     it('should return 409 when the same latitude and longitude already exist', async () => {
-      const response = await request(app.getHttpServer())
-        .post(url)
-        .send({
-          cityName: 'Another Ghent Name',
-          country: 'Belgium',
-          latitude: FAVORITES_SEED[0].latitude,
-          longitude: FAVORITES_SEED[0].longitude,
-        });
+      const response = await request(app.getHttpServer()).post(url).send({
+        cityName: 'Another Ghent Name',
+        country: 'Belgium',
+        latitude: FAVORITES_SEED[0].latitude,
+        longitude: FAVORITES_SEED[0].longitude,
+      });
 
       expect(response.statusCode).toBe(409);
       expect(response.body.message).toBe(
-        'Deze stad staat al bij de favorieten',
+        'This city is already in your favorites',
       );
     });
 
     it('should allow the same city name when the coordinates are different', async () => {
-      const response = await request(app.getHttpServer())
-        .post(url)
-        .send({
-          cityName: 'Ghent',
-          country: 'Belgium',
-          latitude: 51.1,
-          longitude: 3.8,
-        });
+      const response = await request(app.getHttpServer()).post(url).send({
+        cityName: 'Ghent',
+        country: 'Belgium',
+        latitude: 51.1,
+        longitude: 3.8,
+      });
 
       expect(response.statusCode).toBe(201);
     });
@@ -180,9 +182,7 @@ describe('Favorites', () => {
       const { cityName, ...body } = newFavorite;
       void cityName;
 
-      const response = await request(app.getHttpServer())
-        .post(url)
-        .send(body);
+      const response = await request(app.getHttpServer()).post(url).send(body);
 
       expect(response.statusCode).toBe(400);
       expect(response.body.details.body).toHaveProperty('cityName');
@@ -192,9 +192,7 @@ describe('Favorites', () => {
       const { country, ...body } = newFavorite;
       void country;
 
-      const response = await request(app.getHttpServer())
-        .post(url)
-        .send(body);
+      const response = await request(app.getHttpServer()).post(url).send(body);
 
       expect(response.statusCode).toBe(400);
       expect(response.body.details.body).toHaveProperty('country');
@@ -204,9 +202,7 @@ describe('Favorites', () => {
       const { latitude, ...body } = newFavorite;
       void latitude;
 
-      const response = await request(app.getHttpServer())
-        .post(url)
-        .send(body);
+      const response = await request(app.getHttpServer()).post(url).send(body);
 
       expect(response.statusCode).toBe(400);
       expect(response.body.details.body).toHaveProperty('latitude');
@@ -216,9 +212,7 @@ describe('Favorites', () => {
       const { longitude, ...body } = newFavorite;
       void longitude;
 
-      const response = await request(app.getHttpServer())
-        .post(url)
-        .send(body);
+      const response = await request(app.getHttpServer()).post(url).send(body);
 
       expect(response.statusCode).toBe(400);
       expect(response.body.details.body).toHaveProperty('longitude');
@@ -296,6 +290,36 @@ describe('Favorites', () => {
       expect(response.body.details.body).toHaveProperty('longitude');
     });
 
+    it('should return 400 when latitude is out of range', async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({ ...newFavorite, latitude: 90.1 });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('latitude');
+    });
+
+    it('should return 400 when longitude is out of range', async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({ ...newFavorite, longitude: -180.1 });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('longitude');
+    });
+
+    it('should keep exactly one row when the same location is posted twice at once', async () => {
+      const responses = await Promise.all([
+        request(app.getHttpServer()).post(url).send(newFavorite),
+        request(app.getHttpServer()).post(url).send(newFavorite),
+      ]);
+
+      expect(responses.map((r) => r.statusCode).sort()).toEqual([201, 409]);
+
+      const list = await request(app.getHttpServer()).get(url);
+      expect(list.body.items).toHaveLength(FAVORITES_SEED.length + 1);
+    });
+
     it('should return 400 for unexpected body properties', async () => {
       const response = await request(app.getHttpServer())
         .post(url)
@@ -323,14 +347,10 @@ describe('Favorites', () => {
     });
 
     it('should return 404 when deleting a non-existing favorite', async () => {
-      const response = await request(app.getHttpServer()).delete(
-        `${url}/9999`,
-      );
+      const response = await request(app.getHttpServer()).delete(`${url}/9999`);
 
       expect(response.statusCode).toBe(404);
-      expect(response.body.message).toBe(
-        'Er bestaat geen favoriet met deze id',
-      );
+      expect(response.body.message).toBe('No favorite exists with this id');
     });
 
     it('should return 400 when delete id is not a number', async () => {

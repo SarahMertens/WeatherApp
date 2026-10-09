@@ -1,10 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CityListResponseDto, CitySearchRequestDto } from './city.dto';
 import { CityService } from './city.service';
-import {
-  CitySearchRequestDto,
-  CityListResponseDto,
-} from './city.dto';
 
 @ApiTags('Cities')
 @Controller('cities')
@@ -13,16 +10,13 @@ export class CityController {
 
   @ApiResponse({
     status: 200,
-    description: 'Steden gevonden op basis van zoekterm',
+    description: 'Cities matching the search term',
     type: CityListResponseDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Ongeldige zoekterm',
-  })
+  @ApiResponse({ status: 400, description: 'Invalid search term' })
   @ApiResponse({
     status: 503,
-    description: 'Externe geocoding service niet beschikbaar',
+    description: 'The external geocoding service is unavailable',
   })
   @Get('search')
   async search(

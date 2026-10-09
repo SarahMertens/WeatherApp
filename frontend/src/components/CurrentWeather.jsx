@@ -20,7 +20,7 @@ const weatherIcons = {
 function WeatherIcon({ icon }) {
   const Icon = weatherIcons[icon] ?? Cloud;
 
-  return <Icon size={110} strokeWidth={1.2} />;
+  return <Icon size={110} strokeWidth={1.2} aria-hidden />;
 }
 
 export default function CurrentWeather({
@@ -32,7 +32,8 @@ export default function CurrentWeather({
   return (
     <section
       data-testid="current-weather"
-      className="min-h-[355px] rounded-[27px] border border-white/10 bg-gradient-to-br from-white/[0.095] to-white/[0.035] p-6 shadow-2xl shadow-black/10 backdrop-blur-xl sm:p-8">
+      className="min-h-[355px] rounded-[27px] border border-white/10 bg-gradient-to-br from-white/[0.095] to-white/[0.035] p-6 shadow-2xl shadow-black/10 backdrop-blur-xl sm:p-8"
+    >
       <div className="flex justify-between gap-4">
         <div>
           <span className="text-[11px] font-bold tracking-[0.15em] text-slate-400">
@@ -52,13 +53,11 @@ export default function CurrentWeather({
         </div>
 
         <button
+          type="button"
           data-testid="favorite-button"
           onClick={onFavorite}
-          aria-label={
-            isFavorite
-              ? 'Remove from favorites'
-              : 'Add to favorites'
-          }
+          aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          aria-pressed={isFavorite}
           className={`grid h-11 w-11 shrink-0 place-items-center rounded-[14px] border transition ${
             isFavorite
               ? 'border-amber-300/20 bg-amber-300/10 text-amber-300'
@@ -68,6 +67,7 @@ export default function CurrentWeather({
           <Star
             size={23}
             fill={isFavorite ? 'currentColor' : 'none'}
+            aria-hidden
           />
         </button>
       </div>
@@ -82,7 +82,8 @@ export default function CurrentWeather({
         <div>
           <div
             data-testid="temperature"
-            className="font-['Manrope'] text-[64px] leading-[0.9] font-semibold tracking-[-0.07em] sm:text-[96px]">
+            className="font-['Manrope'] text-[64px] leading-[0.9] font-semibold tracking-[-0.07em] sm:text-[96px]"
+          >
             {weather.temperature}
             {weather.temperatureUnit}
           </div>

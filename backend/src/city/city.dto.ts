@@ -1,14 +1,10 @@
-import {
-  IsString,
-  MinLength,
-  MaxLength,
-} from 'class-validator';
+import { IsString, MinLength, MaxLength } from 'class-validator';
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CitySearchRequestDto {
   @ApiProperty({
-    example: 'Gent',
+    example: 'Ghent',
     minLength: 2,
     maxLength: 100,
   })

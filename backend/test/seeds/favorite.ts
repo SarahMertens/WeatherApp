@@ -18,14 +18,10 @@ export const FAVORITES_SEED = [
   },
 ];
 
-export async function seedFavorites(
-  drizzle: DatabaseProvider,
-): Promise<void> {
+export async function seedFavorites(drizzle: DatabaseProvider): Promise<void> {
   await drizzle.insert(favorites).values(FAVORITES_SEED);
 }
 
-export async function clearFavorites(
-  drizzle: DatabaseProvider,
-): Promise<void> {
+export async function clearFavorites(drizzle: DatabaseProvider): Promise<void> {
   await drizzle.delete(favorites);
 }

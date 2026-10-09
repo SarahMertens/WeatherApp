@@ -109,7 +109,7 @@ describe('Weather', () => {
         .query({ latitude: 51.0543, longitude: 3.7174, unit: 'celsius' });
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
-      const url = new URL(String(fetchSpy.mock.calls[0][0]));
+      const url = new URL(fetchSpy.mock.calls[0][0] as string);
 
       expect(url.origin + url.pathname).toBe(
         'https://api.open-meteo.com/v1/forecast',
@@ -130,7 +130,7 @@ describe('Weather', () => {
         .get('/api/weather')
         .query({ latitude: 51.0543, longitude: 3.7174, unit: 'fahrenheit' });
 
-      const url = new URL(String(fetchSpy.mock.calls[0][0]));
+      const url = new URL(fetchSpy.mock.calls[0][0] as string);
       expect(url.searchParams.get('temperature_unit')).toBe('fahrenheit');
     });
 

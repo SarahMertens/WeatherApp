@@ -1,23 +1,18 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
-
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { asc, eq } from 'drizzle-orm';
 import {
   type DatabaseProvider,
   InjectDrizzle,
 } from '../drizzle/drizzle.provider';
-
 import { favorites } from '../drizzle/schema';
-import { eq, and } from 'drizzle-orm';
-import { plainToInstance } from 'class-transformer';
-
 import {
+  CreateFavoriteRequestDto,
   FavoriteListResponseDto,
   FavoriteResponseDto,
-  CreateFavoriteRequestDto,
 } from './favorite.dto';
+
+const NOT_FOUND_MESSAGE = 'No favorite exists with this id';
 
 @Injectable()
 export class FavoriteService {
@@ -27,17 +22,11 @@ export class FavoriteService {
   ) {}
 
   async getAll(): Promise<FavoriteListResponseDto> {
-    const favoritesList = await this.db.query.favorites.findMany();
+    const rows = await this.db.query.favorites.findMany({
+      orderBy: asc(favorites.id),
+    });
 
-    const items = plainToInstance(
-      FavoriteResponseDto,
-      favoritesList,
-      {
-        excludeExtraneousValues: true,
-      },
-    );
-
-    return { items };
+    return { items: rows.map((row) => this.toDto(row)) };
   }
 
   async getById(id: number): Promise<FavoriteResponseDto> {
@@ -46,40 +35,19 @@ export class FavoriteService {
     });
 
     if (!favorite) {
-      throw new NotFoundException(
-        'Er bestaat geen favoriet met deze id',
-      );
+      throw new NotFoundException(NOT_FOUND_MESSAGE);
     }
 
-    return plainToInstance(
-      FavoriteResponseDto,
-      favorite,
-      {
-        excludeExtraneousValues: true,
-      },
-    );
+    return this.toDto(favorite);
   }
 
-  async create(
-    dto: CreateFavoriteRequestDto,
-  ): Promise<FavoriteResponseDto> {
-    const existingFavorite =
-      await this.db.query.favorites.findFirst({
-        where: and(
-          eq(favorites.latitude, dto.latitude),
-          eq(favorites.longitude, dto.longitude),
-        ),
-      });
-
-    if (existingFavorite) {
-      throw new ConflictException(
-        'Deze stad staat al bij de favorieten',
-      );
-    }
-
-    const [result] = await this.db
-      .insert(favorites)
-      .values(dto);
+  /**
+   * A location can only be saved once. That rule lives in the database as a
+   * unique index on (latitude, longitude); a violation is turned into a
+   * 409 Conflict by `DrizzleQueryErrorFilter`.
+   */
+  async create(dto: CreateFavoriteRequestDto): Promise<FavoriteResponseDto> {
+    const [result] = await this.db.insert(favorites).values(dto);
 
     return this.getById(result.insertId);
   }
@@ -90,9 +58,13 @@ export class FavoriteService {
       .where(eq(favorites.id, id));
 
     if (result.affectedRows === 0) {
-      throw new NotFoundException(
-        'Er bestaat geen favoriet met deze id',
-      );
+      throw new NotFoundException(NOT_FOUND_MESSAGE);
     }
+  }
+
+  private toDto(row: typeof favorites.$inferSelect): FavoriteResponseDto {
+    return plainToInstance(FavoriteResponseDto, row, {
+      excludeExtraneousValues: true,
+    });
   }
 }

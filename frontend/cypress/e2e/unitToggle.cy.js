@@ -6,8 +6,8 @@ describe('Unit toggle', () => {
       'getFavorites',
     );
 
-    // Twee aparte mocks: één per eenheid. Cypress kiest de route
-    // die het best matcht met de query parameters van het request.
+    // Two separate mocks, one per unit. Cypress picks the route that
+    // matches the query parameters of the request.
     cy.intercept(
       { method: 'GET', url: '**/weather*', query: { unit: 'celsius' } },
       { fixture: 'weather.json' },
@@ -15,19 +15,25 @@ describe('Unit toggle', () => {
 
     cy.intercept(
       { method: 'GET', url: '**/weather*', query: { unit: 'fahrenheit' } },
-      { fixture: 'Weatherfahrenheit.json' },
+      { fixture: 'weatherfahrenheit.json' },
     ).as('getWeatherFahrenheit');
 
     cy.visit('/');
     cy.wait(['@getFavorites', '@getWeatherCelsius']);
   });
 
-  it('toont standaard graden Celsius', () => {
+  it('shows degrees Celsius by default', () => {
+    cy.getByTestId('unit-celsius').should('have.attr', 'aria-pressed', 'true');
+    cy.getByTestId('unit-fahrenheit').should(
+      'have.attr',
+      'aria-pressed',
+      'false',
+    );
     cy.getByTestId('temperature').should('have.text', '19°C');
     cy.getByTestId('highlight-feels-like').should('contain.text', '17°C');
   });
 
-  it('schakelt over naar Fahrenheit', () => {
+  it('switches to Fahrenheit', () => {
     cy.getByTestId('unit-fahrenheit').click();
 
     cy.wait('@getWeatherFahrenheit')
@@ -39,7 +45,7 @@ describe('Unit toggle', () => {
     cy.getByTestId('highlight-feels-like').should('contain.text', '63°F');
   });
 
-  it('schakelt terug naar Celsius', () => {
+  it('switches back to Celsius', () => {
     cy.getByTestId('unit-fahrenheit').click();
     cy.wait('@getWeatherFahrenheit');
 

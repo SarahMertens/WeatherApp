@@ -28,3 +28,10 @@ Thumbs.db
 # Docker / database
 mysql/
 data/
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Cypress output
+cypress/screenshots/
+cypress/videos/

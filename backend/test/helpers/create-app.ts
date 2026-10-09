@@ -1,42 +1,20 @@
-import {
-  INestApplication,
-  ValidationPipe,
-  BadRequestException,
-} from '@nestjs/common';
-import { TestingModule, Test } from '@nestjs/testing';
-import { ValidationError } from 'class-validator';
+import { INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import { DrizzleQueryErrorFilter } from '../../src/drizzle/drizzle-query-error.filter';
+import { configureApp } from '../../src/app.setup';
 
+/**
+ * Boots the real application (same module, pipes and filters as `main.ts`)
+ * without opening a network port; Supertest talks to it in memory.
+ */
 export async function createTestApp(): Promise<INestApplication> {
-  const moduleFixture: TestingModule = await Test.createTestingModule({
+  const moduleFixture = await Test.createTestingModule({
     imports: [AppModule],
   }).compile();
 
   const app = moduleFixture.createNestApplication();
-  app.setGlobalPrefix('api');
-  app.useGlobalFilters(new DrizzleQueryErrorFilter());
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-      forbidUnknownValues: true,
-      exceptionFactory: (errors: ValidationError[] = []) => {
-        const formattedErrors = errors.reduce(
-          (acc, err) => {
-            acc[err.property] = Object.values(err.constraints || {});
-            return acc;
-          },
-          {} as Record<string, string[]>,
-        );
-
-        return new BadRequestException({
-          details: { body: formattedErrors },
-        });
-      },
-    }),
-  );
+  configureApp(app);
   await app.init();
+
   return app;
 }

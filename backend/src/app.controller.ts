@@ -4,26 +4,18 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 @ApiTags('App')
 @Controller()
 export class AppController {
-  @ApiResponse({
-    status: 200,
-    description: 'Server status',
-  })
+  @ApiResponse({ status: 200, description: 'Basic API information' })
   @Get()
-  getHello() {
+  getInfo() {
     return {
-      message: 'Weather API is running! 🌤️',
+      message: 'Weather API is running',
       timestamp: new Date().toISOString(),
     };
   }
 
-  @ApiResponse({
-    status: 200,
-    description: 'Health check',
-  })
+  @ApiResponse({ status: 200, description: 'Health check' })
   @Get('health')
   health() {
-    return {
-      status: 'ok',
-    };
+    return { status: 'ok' };
   }
 }

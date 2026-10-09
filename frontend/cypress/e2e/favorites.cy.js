@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 
 describe('Favorites', () => {
-  it('toont de opgeslagen steden', () => {
+  it('shows the saved cities', () => {
     cy.visitDashboard();
 
     cy.getByTestId('favorite').should('have.length', 2);
@@ -10,7 +10,7 @@ describe('Favorites', () => {
     cy.getByTestId('favorites-empty').should('not.exist');
   });
 
-  it('toont een lege staat als er geen favorieten zijn', () => {
+  it('shows an empty state when there are no favorites', () => {
     cy.visitDashboard({ favoritesFixture: 'favoritesEmpty.json' });
 
     cy.getByTestId('favorite').should('not.exist');
@@ -20,9 +20,9 @@ describe('Favorites', () => {
     );
   });
 
-  it('voegt de huidige stad toe aan de favorieten', () => {
-    // Stateful mock: de GET geeft telkens de actuele (nagebootste) lijst terug,
-    // de POST vult die lijst aan. Zo blijft de test reproduceerbaar.
+  it('adds the current city to the favorites', () => {
+    // Stateful mock: the GET always returns the current (simulated) list and
+    // the POST adds to it. That keeps the test reproducible.
     let favorites = [];
 
     cy.intercept('GET', '**/favorites', (req) =>
@@ -72,7 +72,7 @@ describe('Favorites', () => {
     );
   });
 
-  it('verwijdert de huidige stad via de ster', () => {
+  it('removes the current city with the star', () => {
     let favorites = [
       {
         id: 1,
@@ -109,7 +109,7 @@ describe('Favorites', () => {
     cy.getByTestId('favorites-empty').should('be.visible');
   });
 
-  it('verwijdert een favoriet via de prullenbakknop', () => {
+  it('removes a favorite with the bin button', () => {
     let favorites = [
       {
         id: 2,
@@ -146,12 +146,48 @@ describe('Favorites', () => {
     cy.getByTestId('favorite').should('not.exist');
   });
 
-  it('laadt het weer van een favoriet bij het aanklikken', () => {
+  it('loads the weather of a favorite when it is clicked', () => {
     cy.visitDashboard();
 
     cy.getByTestId('favorite').last().findByTestId('favorite-select').click();
 
     cy.getByTestId('city-name').should('have.text', 'Paris');
     cy.getByTestId('city-country').should('have.text', 'France');
+  });
+
+  it('shows an error message when a favorite cannot be saved', () => {
+    cy.visitDashboard({ favoritesFixture: 'favoritesEmpty.json' });
+
+    cy.intercept('POST', '**/favorites', { statusCode: 500, body: {} }).as(
+      'addFavorite',
+    );
+
+    cy.getByTestId('favorite-button').click();
+    cy.wait('@addFavorite');
+
+    cy.getByTestId('favorites-error').should(
+      'contain.text',
+      'Unable to update favorites.',
+    );
+    // The weather stays on screen: only the favorites action failed.
+    cy.getByTestId('current-weather').should('be.visible');
+  });
+
+  it('shows an error message when the favorites cannot be loaded', () => {
+    cy.intercept('GET', '**/favorites', { statusCode: 500, body: {} }).as(
+      'getFavorites',
+    );
+    cy.intercept('GET', '**/weather*', { fixture: 'weather.json' }).as(
+      'getWeather',
+    );
+
+    cy.visit('/');
+    cy.wait(['@getFavorites', '@getWeather']);
+
+    cy.getByTestId('favorites-error').should(
+      'contain.text',
+      'Unable to load your favorites.',
+    );
+    cy.getByTestId('current-weather').should('be.visible');
   });
 });

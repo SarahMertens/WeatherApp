@@ -1,8 +1,8 @@
 /// <reference types="cypress" />
 
 describe('Weather dashboard', () => {
-  it('toont het weer van de standaardstad', () => {
-    cy.visitDashboard(); // mockt /favorites en /weather via fixtures
+  it('shows the weather of the default city', () => {
+    cy.visitDashboard(); // mocks /favorites and /weather with fixtures
 
     cy.getByTestId('app-title').should('contain.text', 'Weatherly');
 
@@ -14,7 +14,7 @@ describe('Weather dashboard', () => {
     cy.getByTestId('feels-like').should('contain.text', '17°C');
   });
 
-  it('toont de highlights van vandaag', () => {
+  it("shows today's highlights", () => {
     cy.visitDashboard();
 
     cy.getByTestId('highlights').should('be.visible');
@@ -28,11 +28,11 @@ describe('Weather dashboard', () => {
     );
   });
 
-  it('toont een loader bij een trage response', () => {
+  it('shows a loader while a slow response is on its way', () => {
     cy.intercept('GET', '**/favorites', { fixture: 'favorites.json' });
 
-    // delay zorgt ervoor dat het antwoord pas na 1 seconde terugkomt,
-    // zo kunnen we de loading indicator zien verschijnen en verdwijnen.
+    // The delay keeps the response away for a second, which gives us time
+    // to see the loading indicator appear and disappear again.
     cy.intercept('GET', '**/weather*', {
       fixture: 'weather.json',
       delay: 1000,
@@ -48,7 +48,7 @@ describe('Weather dashboard', () => {
     cy.getByTestId('current-weather').should('be.visible');
   });
 
-  it('toont een foutboodschap als de back-end faalt', () => {
+  it('shows an error message when the backend fails', () => {
     cy.intercept('GET', '**/favorites', { fixture: 'favorites.json' });
     cy.intercept('GET', '**/weather*', { statusCode: 500, body: {} }).as(
       'getWeather',
@@ -61,6 +61,35 @@ describe('Weather dashboard', () => {
       'contain.text',
       'Unable to load the weather right now.',
     );
+    cy.getByTestId('current-weather').should('not.exist');
+  });
+
+  it('keeps the favorites usable when the weather cannot be loaded', () => {
+    cy.intercept('GET', '**/favorites', { fixture: 'favorites.json' });
+    cy.intercept('GET', '**/weather*', { statusCode: 500, body: {} }).as(
+      'getWeather',
+    );
+
+    cy.visit('/');
+    cy.wait('@getWeather');
+
+    cy.getByTestId('error').should('be.visible');
+    cy.getByTestId('favorite').should('have.length', 2);
+  });
+
+  it('never shows the weather of the previous city after a failed request', () => {
+    cy.visitDashboard();
+    cy.getByTestId('temperature').should('have.text', '19°C');
+
+    // From now on the weather endpoint fails.
+    cy.intercept('GET', '**/weather*', { statusCode: 500, body: {} }).as(
+      'getWeatherFailing',
+    );
+
+    cy.getByTestId('favorite').last().findByTestId('favorite-select').click();
+    cy.wait('@getWeatherFailing');
+
+    cy.getByTestId('error').should('contain.text', 'Paris');
     cy.getByTestId('current-weather').should('not.exist');
   });
 });

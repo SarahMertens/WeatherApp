@@ -1,9 +1,4 @@
-import {
-  IsEnum,
-  IsLatitude,
-  IsLongitude,
-  IsOptional,
-} from 'class-validator';
+import { IsEnum, IsLatitude, IsLongitude, IsOptional } from 'class-validator';
 import { Type, Expose } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 

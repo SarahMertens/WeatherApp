@@ -1,10 +1,6 @@
-import {
-  Logger,
-  Module,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
-
+import { Logger, Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { migrate } from 'drizzle-orm/mysql2/migrator';
+import path from 'node:path';
 import {
   type DatabaseProvider,
   DrizzleAsyncProvider,
@@ -12,16 +8,11 @@ import {
   InjectDrizzle,
 } from './drizzle.provider';
 
-import { migrate } from 'drizzle-orm/mysql2/migrator';
-import path from 'node:path';
-
 @Module({
   providers: [...drizzleProvider],
   exports: [DrizzleAsyncProvider],
 })
-export class DrizzleModule
-  implements OnModuleDestroy, OnModuleInit
-{
+export class DrizzleModule implements OnModuleDestroy, OnModuleInit {
   private readonly logger = new Logger(DrizzleModule.name);
 
   constructor(
@@ -29,28 +20,16 @@ export class DrizzleModule
     private readonly db: DatabaseProvider,
   ) {}
 
+  /**
+   * Pending migrations are applied on startup, so a fresh database (local,
+   * CI or a test container) is ready without a separate manual step.
+   */
   async onModuleInit() {
-    if (process.env.NODE_ENV === 'testing') {
-      this.logger.log('Skipping migrations (test mode)');
-      return;
-    }
+    await migrate(this.db, {
+      migrationsFolder: path.resolve('migrations'),
+    });
 
-    try {
-      this.logger.log('Running migrations...');
-
-      await migrate(this.db, {
-        migrationsFolder: path.resolve('migrations'),
-      });
-
-      this.logger.log('Migrations completed');
-    } catch (error) {
-      this.logger.error(
-        'Migration failed',
-        error instanceof Error ? error.message : error,
-      );
-
-      throw error;
-    }
+    this.logger.log('Database migrations are up to date');
   }
 
   async onModuleDestroy() {

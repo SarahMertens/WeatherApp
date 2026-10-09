@@ -2,7 +2,6 @@ import { MySqlContainer } from '@testcontainers/mysql';
 import type { StartedTestContainer } from 'testcontainers';
 
 declare global {
-  // eslint-disable-next-line no-var
   var mySQLContainer: StartedTestContainer;
 }
 export default async () => {

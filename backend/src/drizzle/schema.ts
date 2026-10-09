@@ -10,9 +10,7 @@ import {
 export const favorites = mysqlTable(
   'favorites',
   {
-    id: int('id', { unsigned: true })
-      .primaryKey()
-      .autoincrement(),
+    id: int('id', { unsigned: true }).primaryKey().autoincrement(),
 
     cityName: varchar('city_name', {
       length: 100,
@@ -22,15 +20,11 @@ export const favorites = mysqlTable(
       length: 100,
     }).notNull(),
 
-    latitude: double('latitude')
-      .notNull(),
+    latitude: double('latitude').notNull(),
 
-    longitude: double('longitude')
-      .notNull(),
+    longitude: double('longitude').notNull(),
 
-    createdAt: timestamp('created_at')
-      .defaultNow()
-      .notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
   },
 
   (table) => [

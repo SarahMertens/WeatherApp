@@ -1,15 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-
-import configuration from './config/configuration';
-
-import { DrizzleModule } from './drizzle/drizzle.module';
-
-import { FavoriteModule } from './favorite/favorite.module';
-import { CityModule } from './city/city.module';
-import { WeatherModule } from './weather/weather.module';
-
+import { APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
+import { CityModule } from './city/city.module';
+import configuration from './config/configuration';
+import { DrizzleQueryErrorFilter } from './drizzle/drizzle-query-error.filter';
+import { DrizzleModule } from './drizzle/drizzle.module';
+import { FavoriteModule } from './favorite/favorite.module';
+import { WeatherModule } from './weather/weather.module';
 
 @Module({
   imports: [
@@ -17,14 +15,17 @@ import { AppController } from './app.controller';
       load: [configuration],
       isGlobal: true,
     }),
-
     DrizzleModule,
-
     FavoriteModule,
     CityModule,
     WeatherModule,
   ],
-
   controllers: [AppController],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: DrizzleQueryErrorFilter,
+    },
+  ],
 })
 export class AppModule {}

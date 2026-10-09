@@ -1,18 +1,20 @@
 {
   "name": "weather-backend",
-  "version": "0.0.1",
-  "description": "Backend for the DEV@WORK weather application",
+  "version": "1.0.0",
+  "description": "REST API for the Weatherly weather dashboard",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "eslint \"{src,test}/**/*.ts\"",
+    "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,test}/**/*.ts\"",
     "test": "jest --runInBand",
     "test:watch": "pnpm test --watch",
     "test:cov": "pnpm test --coverage",
@@ -82,5 +84,8 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
   },
-  "packageManager": "pnpm@10.15.0"
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">=22"
+  }
 }

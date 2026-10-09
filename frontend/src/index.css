@@ -1,16 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
-
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   font-family: 'DM Sans', sans-serif;
   color: #f8fafc;
   background: #080d1a;
   font-synthesis: none;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 body {
@@ -21,4 +15,10 @@ body {
 
 button {
   cursor: pointer;
+}
+
+/* Visible keyboard focus on every interactive element. */
+:focus-visible {
+  outline: 2px solid #818cf8;
+  outline-offset: 2px;
 }

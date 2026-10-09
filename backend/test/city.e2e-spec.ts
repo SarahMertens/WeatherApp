@@ -42,7 +42,7 @@ describe('Cities', () => {
 
       const response = await request(app.getHttpServer())
         .get('/api/cities/search')
-        .query({ q: 'Gent' });
+        .query({ q: 'Ghent' });
 
       expect(response.statusCode).toBe(200);
       expect(response.body.items).toEqual([
@@ -105,16 +105,16 @@ describe('Cities', () => {
 
       await request(app.getHttpServer())
         .get('/api/cities/search')
-        .query({ q: 'Gent' });
+        .query({ q: 'Ghent' });
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
-      const calledUrl = String(fetchSpy.mock.calls[0][0]);
+      const calledUrl = fetchSpy.mock.calls[0][0] as string;
       const url = new URL(calledUrl);
 
       expect(url.origin + url.pathname).toBe(
         'https://geocoding-api.open-meteo.com/v1/search',
       );
-      expect(url.searchParams.get('name')).toBe('Gent');
+      expect(url.searchParams.get('name')).toBe('Ghent');
       expect(url.searchParams.get('count')).toBe('10');
       expect(url.searchParams.get('language')).toBe('en');
       expect(url.searchParams.get('format')).toBe('json');
@@ -153,7 +153,7 @@ describe('Cities', () => {
     it('should return 400 when q is not a string', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/cities/search')
-        .query({ q: ['Gent', 'Brussels'] });
+        .query({ q: ['Ghent', 'Brussels'] });
 
       expect(response.statusCode).toBe(400);
       expect(response.body.details.body).toHaveProperty('q');
@@ -163,7 +163,7 @@ describe('Cities', () => {
     it('should return 400 for unexpected query parameters', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/cities/search')
-        .query({ q: 'Gent', extra: 'value' });
+        .query({ q: 'Ghent', extra: 'value' });
 
       expect(response.statusCode).toBe(400);
       expect(response.body.details.body).toHaveProperty('extra');
@@ -175,7 +175,7 @@ describe('Cities', () => {
 
       const response = await request(app.getHttpServer())
         .get('/api/cities/search')
-        .query({ q: 'Gent' });
+        .query({ q: 'Ghent' });
 
       expect(response.statusCode).toBe(503);
       expect(response.body.message).toBe(
@@ -190,7 +190,7 @@ describe('Cities', () => {
 
       const response = await request(app.getHttpServer())
         .get('/api/cities/search')
-        .query({ q: 'Gent' });
+        .query({ q: 'Ghent' });
 
       expect(response.statusCode).toBe(503);
       expect(response.body.message).toBe(

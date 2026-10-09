@@ -1,9 +1,13 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { CityListResponseDto, CityResponseDto } from './city.dto';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { OpenMeteoClient } from '../open-meteo/open-meteo.client';
+import { CityListResponseDto } from './city.dto';
 
-interface OpenMeteoGeocodingResponse {
-  results?: OpenMeteoCity[];
-}
+const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
+const MAX_RESULTS = 10;
 
 interface OpenMeteoCity {
   name: string;
@@ -12,32 +16,30 @@ interface OpenMeteoCity {
   country?: string;
 }
 
+interface OpenMeteoGeocodingResponse {
+  // Open-Meteo leaves `results` out entirely when nothing matches.
+  results?: OpenMeteoCity[];
+}
+
 @Injectable()
 export class CityService {
-  private readonly geocodingUrl =
-    'https://geocoding-api.open-meteo.com/v1/search';
+  private readonly logger = new Logger(CityService.name);
+
+  constructor(private readonly openMeteo: OpenMeteoClient) {}
 
   async search(query: string): Promise<CityListResponseDto> {
-    const params = new URLSearchParams({
-      name: query,
-      count: '10',
-      language: 'en',
-      format: 'json',
-    });
-
     try {
-      const response = await fetch(`${this.geocodingUrl}?${params}`);
+      const data = await this.openMeteo.get<OpenMeteoGeocodingResponse>(
+        GEOCODING_URL,
+        {
+          name: query,
+          count: String(MAX_RESULTS),
+          language: 'en',
+          format: 'json',
+        },
+      );
 
-      if (!response.ok) {
-        throw new Error(
-          `Open-Meteo returned status ${response.status}`,
-        );
-      }
-
-      const data =
-        (await response.json()) as OpenMeteoGeocodingResponse;
-
-      const items: CityResponseDto[] = (data.results ?? []).map((city) => ({
+      const items = (data.results ?? []).map((city) => ({
         name: city.name,
         country: city.country ?? 'Unknown',
         latitude: city.latitude,
@@ -46,7 +48,7 @@ export class CityService {
 
       return { items };
     } catch (error) {
-      console.error('Open-Meteo geocoding error:', error);
+      this.logger.error('Open-Meteo geocoding request failed', error);
 
       throw new ServiceUnavailableException(
         'City search is currently unavailable',

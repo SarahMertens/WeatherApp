@@ -1,42 +1,35 @@
-import axiosRoot from 'axios';
+import axios from 'axios';
 
-const baseUrl = import.meta.env.VITE_API_URL;
-
-export const axios = axiosRoot.create({
-  baseURL: baseUrl,
+const api = axios.create({
+  // Falls back to the backend's default dev address when no .env is present.
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api',
+  timeout: 10000,
 });
 
 export async function searchCities(query) {
-  const { data } = await axios.get('/cities/search', {
+  const { data } = await api.get('/cities/search', {
     params: { q: query },
   });
 
   return data.items;
 }
 
-export async function getWeather(
-  latitude,
-  longitude,
-  unit = 'celsius',
-) {
-  const { data } = await axios.get('/weather', {
-    params: {
-      latitude,
-      longitude,
-      unit,
-    },
+export async function getWeather(latitude, longitude, unit = 'celsius') {
+  const { data } = await api.get('/weather', {
+    params: { latitude, longitude, unit },
   });
 
   return data;
 }
 
 export async function getFavorites() {
-  const { data } = await axios.get('/favorites');
+  const { data } = await api.get('/favorites');
+
   return data.items;
 }
 
 export async function addFavorite(city) {
-  const { data } = await axios.post('/favorites', {
+  const { data } = await api.post('/favorites', {
     cityName: city.name,
     country: city.country,
     latitude: city.latitude,
@@ -47,5 +40,5 @@ export async function addFavorite(city) {
 }
 
 export async function deleteFavorite(id) {
-  await axios.delete(`/favorites/${id}`);
+  await api.delete(`/favorites/${id}`);
 }

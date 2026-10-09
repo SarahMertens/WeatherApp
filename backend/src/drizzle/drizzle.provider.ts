@@ -13,8 +13,7 @@ export const drizzleProvider = [
     inject: [ConfigService],
 
     useFactory: (configService: ConfigService<ServerConfig>) => {
-      const databaseConfig =
-        configService.get<DatabaseConfig>('database')!;
+      const databaseConfig = configService.get<DatabaseConfig>('database')!;
 
       return drizzle({
         client: mysql.createPool({
@@ -29,10 +28,8 @@ export const drizzleProvider = [
   },
 ];
 
-export const InjectDrizzle = () =>
-  Inject(DrizzleAsyncProvider);
+export const InjectDrizzle = () => Inject(DrizzleAsyncProvider);
 
-export type DatabaseProvider =
-  MySql2Database<typeof schema> & {
-    $client: mysql.Pool;
-  };
+export type DatabaseProvider = MySql2Database<typeof schema> & {
+  $client: mysql.Pool;
+};

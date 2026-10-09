@@ -47,12 +47,10 @@ export default function WeatherHighlights({ weather }) {
             className="min-h-[145px] rounded-[19px] border border-white/10 bg-gradient-to-br from-white/[0.095] to-white/[0.035] p-5 shadow-xl shadow-black/10 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/15"
           >
             <div className="mb-5 grid h-10 w-10 place-items-center rounded-xl bg-indigo-400/10 text-indigo-300">
-              <Icon size={21} />
+              <Icon size={21} aria-hidden />
             </div>
 
-            <span className="block text-xs text-slate-500">
-              {label}
-            </span>
+            <span className="block text-xs text-slate-500">{label}</span>
 
             <strong
               data-testid="highlight-value"

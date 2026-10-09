@@ -1,4 +1,11 @@
-import { IsString, IsNumber, MinLength, MaxLength } from 'class-validator';
+import {
+  IsLatitude,
+  IsLongitude,
+  IsNumber,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -55,11 +62,13 @@ export class CreateFavoriteRequestDto {
   @MaxLength(100)
   country!: string;
 
-  @ApiProperty({ example: 51.0543 })
+  @ApiProperty({ example: 51.0543, minimum: -90, maximum: 90 })
   @IsNumber()
+  @IsLatitude()
   latitude!: number;
 
-  @ApiProperty({ example: 3.7174 })
+  @ApiProperty({ example: 3.7174, minimum: -180, maximum: 180 })
   @IsNumber()
+  @IsLongitude()
   longitude!: number;
 }
