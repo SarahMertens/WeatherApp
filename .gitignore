@@ -4,6 +4,8 @@ node_modules/
 # Environment variables
 .env
 .env.*
+# Demo-mode settings contain no secrets and are needed by Netlify
+!.env.demo
 !.env.example
 
 # Build output

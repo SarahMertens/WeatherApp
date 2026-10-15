@@ -3,6 +3,8 @@
 A full-stack weather dashboard: search any city, see its current weather in
 Celsius or Fahrenheit, and keep a list of favorite cities.
 
+**[Try the live demo](https://weatherly-sarahmertens.netlify.app)**
+
 ![Weatherly dashboard](docs/screenshot-desktop.png)
 
 Originally built as a take-home assignment for a full-stack internship. The
@@ -97,6 +99,19 @@ pnpm dev
 ```
 
 Open <http://localhost:5173>.
+
+### Demo mode (frontend only)
+
+The live demo runs without the backend. Built with `--mode demo`, the frontend
+talks to Open-Meteo directly and keeps favorites in the browser's localStorage.
+The switch happens in one place, `frontend/src/api/index.js`; components and
+hooks are identical in both modes.
+
+```bash
+cd frontend
+pnpm dev:demo     # develop in demo mode
+pnpm build:demo   # what Netlify builds (see netlify.toml)
+```
 
 ## API
 

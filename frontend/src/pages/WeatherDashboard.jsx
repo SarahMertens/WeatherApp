@@ -6,6 +6,7 @@ import CurrentWeather from '../components/CurrentWeather';
 import Favorites from '../components/Favorites';
 import UnitToggle from '../components/UnitToggle';
 import WeatherHighlights from '../components/WeatherHighlights';
+import { IS_DEMO } from '../api';
 import { useFavorites } from '../hooks/useFavorites';
 import { useWeather } from '../hooks/useWeather';
 
@@ -128,6 +129,25 @@ export default function WeatherDashboard() {
             onDelete={removeFavorite}
           />
         </div>
+
+        {IS_DEMO && (
+          <p
+            data-testid="demo-notice"
+            className="mt-8 rounded-2xl border border-indigo-400/20 bg-indigo-400/[0.08] px-4 py-3 text-center text-sm text-slate-300"
+          >
+            <strong className="text-indigo-300">Demo version.</strong> The weather
+            is live, but this demo runs without the NestJS backend: favorites are
+            stored in your own browser instead of MySQL.{' '}
+            <a
+              href="https://github.com/SarahMertens/WeatherApp"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-white"
+            >
+              View the full-stack code
+            </a>
+          </p>
+        )}
 
         <footer className="pt-10 text-center text-xs text-slate-600">
           Weather data provided by{' '}

@@ -1,44 +1,17 @@
-import axios from 'axios';
+import * as backend from './http';
+import * as demo from './demo';
 
-const api = axios.create({
-  // Falls back to the backend's default dev address when no .env is present.
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api',
-  timeout: 10000,
-});
+/**
+ * Which data source the app uses is decided when the app is built:
+ *
+ * - `pnpm build`       → our NestJS backend (VITE_API_URL)
+ * - `pnpm build:demo`  → demo mode: Open-Meteo directly and favorites in the browser
+ *                        (reads `.env.demo`, which sets VITE_DEMO=true)
+ *
+ * Components and hooks always import from here, so they work with both.
+ */
+export const IS_DEMO = import.meta.env.VITE_DEMO === 'true';
 
-export async function searchCities(query) {
-  const { data } = await api.get('/cities/search', {
-    params: { q: query },
-  });
+const source = IS_DEMO ? demo : backend;
 
-  return data.items;
-}
-
-export async function getWeather(latitude, longitude, unit = 'celsius') {
-  const { data } = await api.get('/weather', {
-    params: { latitude, longitude, unit },
-  });
-
-  return data;
-}
-
-export async function getFavorites() {
-  const { data } = await api.get('/favorites');
-
-  return data.items;
-}
-
-export async function addFavorite(city) {
-  const { data } = await api.post('/favorites', {
-    cityName: city.name,
-    country: city.country,
-    latitude: city.latitude,
-    longitude: city.longitude,
-  });
-
-  return data;
-}
-
-export async function deleteFavorite(id) {
-  await api.delete(`/favorites/${id}`);
-}
+export const { searchCities, getWeather, getFavorites, addFavorite, deleteFavorite } = source;
